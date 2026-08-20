@@ -300,6 +300,14 @@
                 <span>Copy Analysis</span>
               </button>
 
+              <button class="action-btn" id="emailReportBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                <span>Email Report</span>
+              </button>
+
               <button class="action-btn" id="downloadReportBtn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -334,6 +342,38 @@
         <div class="history-empty-hint">No inspection snapshots recorded yet. Capture or run auto-scan to save timeline history.</div>
       </div>
     </footer>
+
+    <!-- EMAIL DISPATCH MODAL -->
+    <div class="modal-backdrop" id="emailModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>📧 Email Inspection Report</h3>
+          <button class="icon-btn" id="closeEmailModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          
+          <div class="form-group">
+            <label for="emailToInput">Recipient Email Address *</label>
+            <input type="email" id="emailToInput" placeholder="your-email@example.com" required>
+          </div>
+
+          <div class="form-group">
+            <label for="emailUserNameInput">Your Name / Sender</label>
+            <input type="text" id="emailUserNameInput" placeholder="Vasanthkumar">
+          </div>
+
+          <div class="form-group">
+            <label for="emailNotesInput">Personal Notes / Inspection Info</label>
+            <textarea id="emailNotesInput" rows="3" placeholder="Add personal notes or extra details to include in email..."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn secondary-btn" id="openMailAppBtn" title="Open native mail client">Open Mail App</button>
+          <button class="btn primary-btn" id="sendEmailSubmitBtn">Send Email Now</button>
+        </div>
+      </div>
+    </div>
 
     <!-- CONFIG / SETTINGS MODAL MODAL -->
     <div class="modal-backdrop" id="configModal">

@@ -997,6 +997,104 @@ ${lastAnalysisData.analysis}
     });
   }
 
+  // Email Dispatch Modal Logic
+  const emailReportBtn = document.getElementById('emailReportBtn');
+  const emailModal = document.getElementById('emailModal');
+  const closeEmailModalBtn = document.getElementById('closeEmailModalBtn');
+  const sendEmailSubmitBtn = document.getElementById('sendEmailSubmitBtn');
+  const openMailAppBtn = document.getElementById('openMailAppBtn');
+  const emailToInput = document.getElementById('emailToInput');
+  const emailUserNameInput = document.getElementById('emailUserNameInput');
+  const emailNotesInput = document.getElementById('emailNotesInput');
+
+  if (emailReportBtn) {
+    emailReportBtn.addEventListener('click', () => {
+      if (!lastAnalysisData) {
+        alert("Please run a camera analysis first before sending an email report.");
+        return;
+      }
+      emailModal.classList.add('active');
+    });
+  }
+
+  if (closeEmailModalBtn) {
+    closeEmailModalBtn.addEventListener('click', () => {
+      emailModal.classList.remove('active');
+    });
+  }
+
+  if (openMailAppBtn) {
+    openMailAppBtn.addEventListener('click', () => {
+      if (!lastAnalysisData) return;
+      const toEmail = emailToInput.value.trim();
+      const subject = encodeURIComponent(`NEXUS Vision Report - ${lastAnalysisData.timestamp}`);
+      const bodyText = encodeURIComponent(
+        `NEXUS VISION AI REPORT\n` +
+        `--------------------\n` +
+        `User Notes: ${emailNotesInput.value.trim() || 'N/A'}\n` +
+        `Timestamp: ${lastAnalysisData.timestamp}\n` +
+        `Model: ${lastAnalysisData.model}\n\n` +
+        `AI ANALYSIS:\n${lastAnalysisData.analysis}`
+      );
+      window.location.href = `mailto:${toEmail}?subject=${subject}&body=${bodyText}`;
+      emailModal.classList.remove('active');
+    });
+  }
+
+  if (sendEmailSubmitBtn) {
+    sendEmailSubmitBtn.addEventListener('click', async () => {
+      const toEmail = emailToInput.value.trim();
+      if (!toEmail) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      if (!lastAnalysisData) {
+        alert("No active analysis data to email.");
+        return;
+      }
+
+      sendEmailSubmitBtn.disabled = true;
+      sendEmailSubmitBtn.textContent = "Sending Email...";
+
+      try {
+        const emailApiEndpoint = (window.location.protocol === 'file:') 
+          ? 'http://localhost:3000/api/send-email' 
+          : '/api/send-email';
+
+        const response = await fetch(emailApiEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toEmail: toEmail,
+            userName: emailUserNameInput.value.trim(),
+            personalInfo: emailNotesInput.value.trim(),
+            analysisText: lastAnalysisData.analysis,
+            model: lastAnalysisData.model,
+            timestamp: lastAnalysisData.timestamp,
+            image: lastAnalysisData.image
+          })
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+          throw new Error(data.error || "Failed to send email.");
+        }
+
+        playSound('success');
+        alert(data.message || `Email report successfully sent to ${toEmail}!`);
+        emailModal.classList.remove('active');
+
+      } catch (err) {
+        console.error("Email Error:", err);
+        alert(`Email Dispatch Failed: ${err.message}`);
+      } finally {
+        sendEmailSubmitBtn.disabled = false;
+        sendEmailSubmitBtn.textContent = "Send Email Now";
+      }
+    });
+  }
+
   // Initial UI & Session Memory sync
   updateTtsUi();
   loadSessionMemory();
