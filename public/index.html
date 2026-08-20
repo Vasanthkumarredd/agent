@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexus Vision AI - Real-Time Camera Object & Vision Analyzer</title>
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <div class="pulse-ring"></div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>NEXUS <span class="highlight">VISION AI</span></h1>
+          <p class="subtitle">Instant Camera Analysis & Object Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Header Status Bar -->
+      <div class="header-status">
+        <div class="status-badge" id="cameraStatusBadge">
+          <span class="status-dot green"></span>
+          <span id="cameraStatusText">Camera Off</span>
+        </div>
+        <div class="status-badge" id="apiStatusBadge">
+          <span class="status-dot blue"></span>
+          <span id="apiStatusText">NVIDIA NIM Vision API</span>
+        </div>
+        <button class="icon-btn-text" id="quickTtsToggleBtn" title="Toggle Auto Voice Readout (TTS)">
+          <span id="quickTtsIcon">🔇</span>
+          <span id="quickTtsText">Voice OFF</span>
+        </button>
+        <button class="icon-btn" id="configToggleBtn" title="API & System Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid Workspace -->
+    <main class="main-layout">
+
+      <!-- LEFT: Camera HUD & Capture Viewport -->
+      <section class="camera-card">
+        <div class="camera-viewport-container" id="viewportContainer">
+          
+          <!-- Live Video Stream -->
+          <video id="webcamVideo" autoplay playsinline muted></video>
+          
+          <!-- Processing Overlay Canvas (Laser line, reticle, motion grid) -->
+          <canvas id="hudCanvas"></canvas>
+          <canvas id="motionCanvas" style="display: none;"></canvas>
+
+          <!-- Scanning Laser Effect -->
+          <div class="laser-scanner" id="laserScanner"></div>
+
+          <!-- Camera Placeholder / Start State -->
+          <div class="camera-placeholder" id="cameraPlaceholder">
+            <div class="placeholder-content">
+              <div class="placeholder-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+              <h3>Camera Feed Inactive</h3>
+              <p>Place an object in front of your camera and click below to initialize live stream.</p>
+              <button class="btn primary-btn" id="startCameraBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Enable Camera Access
+              </button>
+            </div>
+          </div>
+
+          <!-- HUD Top Stats Bar -->
+          <div class="hud-overlay-top">
+            <div class="hud-chip"><span id="hudFpsText">0 FPS</span></div>
+            <div class="hud-chip"><span id="hudResText">1280x720</span></div>
+            <div class="hud-chip motion-chip" id="motionSensitivityBadge">
+              <span class="dot"></span> Motion Sensor
+            </div>
+          </div>
+
+          <!-- Target Reticle Overlay -->
+          <div class="hud-reticle" id="hudReticle">
+            <div class="reticle-corner top-left"></div>
+            <div class="reticle-corner top-right"></div>
+            <div class="reticle-corner bottom-left"></div>
+            <div class="reticle-corner bottom-right"></div>
+            <div class="reticle-center"></div>
+          </div>
+        </div>
+
+        <!-- Camera Toolbar Controls -->
+        <div class="camera-toolbar">
+          <div class="toolbar-group">
+            <select id="cameraSourceSelect" class="select-input" title="Select Video Device">
+              <option value="">Detecting cameras...</option>
+            </select>
+
+            <button class="icon-btn-text" id="toggleGridBtn" title="Toggle HUD Grid Overlay">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <line x1="3" y1="9" x2="21" y2="9"/>
+                <line x1="3" y1="15" x2="21" y2="15"/>
+                <line x1="9" y1="3" x2="9" y2="21"/>
+                <line x1="15" y1="3" x2="15" y2="21"/>
+              </svg>
+              <span>Grid</span>
+            </button>
+          </div>
+
+          <!-- Main Capture & Analyze Button -->
+          <div class="toolbar-center">
+            <button class="btn capture-btn" id="analyzeNowBtn" disabled>
+              <div class="glow-effect"></div>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              </svg>
+              <span>ANALYZE NOW</span>
+              <kbd>Space</kbd>
+            </button>
+          </div>
+
+          <!-- Scan Mode Selectors -->
+          <div class="toolbar-group">
+            <div class="mode-selector">
+              <button class="mode-btn active" data-mode="manual" id="modeManualBtn">Manual</button>
+              <button class="mode-btn" data-mode="auto" id="modeAutoBtn">Auto 1s</button>
+              <button class="mode-btn" data-mode="motion" id="modeMotionBtn">Motion</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: AI Analysis Panel -->
+      <section class="analysis-card">
+        
+        <!-- Preset Prompt Categories -->
+        <div class="preset-section">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+            <span>Analysis Modes & Presets</span>
+          </div>
+          
+          <div class="preset-chips-grid">
+            <button class="preset-chip active" data-preset="object">
+              <span class="chip-icon">🔍</span>
+              <span class="chip-label">Object & Placement</span>
+            </button>
+            <button class="preset-chip" data-preset="ocr">
+              <span class="chip-icon">📝</span>
+              <span class="chip-label">OCR / Read Text</span>
+            </button>
+            <button class="preset-chip" data-preset="safety">
+              <span class="chip-icon">🛑</span>
+              <span class="chip-label">Safety & Hazard Audit</span>
+            </button>
+            <button class="preset-chip" data-preset="count">
+              <span class="chip-icon">📦</span>
+              <span class="chip-label">Item Count & Inventory</span>
+            </button>
+          </div>
+
+          <!-- Custom Prompt Input with Voice Command Mic Button -->
+          <div class="custom-prompt-wrapper">
+            <button class="icon-btn mic-btn" id="micBtn" title="Speak your question (Voice Assistant)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </button>
+            <input type="text" id="customPromptInput" placeholder="Ask by typing or click 🎙️ to speak your question..." autocomplete="off">
+            <button class="icon-btn primary-icon-btn" id="sendCustomPromptBtn" title="Analyze with custom prompt">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Live Voice Listening Status Bar -->
+          <div class="voice-status-bar" id="voiceStatusBar" style="display: none;">
+            <span class="mic-pulse">🔴</span>
+            <span id="voiceStatusText">Listening... Speak your question now!</span>
+          </div>
+        </div>
+
+        <!-- Output Display Area -->
+        <div class="output-container" id="outputContainer">
+          
+          <!-- Initial Empty State -->
+          <div class="empty-state" id="emptyOutputState">
+            <div class="radar-scan-graphic">
+              <div class="radar-circle c1"></div>
+              <div class="radar-circle c2"></div>
+              <div class="radar-circle c3"></div>
+              <div class="radar-line"></div>
+            </div>
+            <h4>Ready for Visual Inspection</h4>
+            <p>Position an object in front of the camera and click <strong>ANALYZE NOW</strong> or press <strong>[Spacebar]</strong>.</p>
+          </div>
+
+          <!-- Loading Spinner Card -->
+          <div class="loading-card" id="loadingState" style="display: none;">
+            <div class="cyan-spinner"></div>
+            <div class="loading-info">
+              <h4 id="loadingPromptTitle">Analyzing Image Payload...</h4>
+              <p>Connecting to NVIDIA Llama 3.2 Vision API</p>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="loadingProgressFill"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Analysis Results Content -->
+          <div class="analysis-result-box" id="analysisResultBox" style="display: none;">
+            <div class="result-header">
+              <div class="model-badge">
+                <span class="bolt">⚡</span>
+                <span id="resultModelName">meta/llama-3.2-11b-vision-instruct</span>
+              </div>
+              <div class="meta-pills">
+                <span class="pill" id="resultLatencyPill">-- ms</span>
+                <span class="pill" id="resultTimestampPill">12:00:00 PM</span>
+              </div>
+            </div>
+
+            <div class="result-body" id="resultTextBody">
+              <!-- AI generated text content rendered here -->
+            </div>
+
+            <!-- Action Toolbar for Results -->
+            <div class="result-actions">
+              <button class="action-btn" id="ttsSpeakBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                </svg>
+                <span id="ttsBtnText">Read Aloud</span>
+              </button>
+
+              <button class="action-btn" id="copyResultBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span>Copy Analysis</span>
+              </button>
+
+              <button class="action-btn" id="downloadReportBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Export Report</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <!-- BOTTOM: History Timeline Strip -->
+    <footer class="history-footer">
+      <div class="history-header">
+        <div class="history-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Snapshot & Inspection History</span>
+          <span class="badge" id="historyCountBadge">0</span>
+        </div>
+        <button class="text-link-btn" id="clearHistoryBtn">Clear History</button>
+      </div>
+
+      <div class="history-gallery" id="historyGallery">
+        <div class="history-empty-hint">No inspection snapshots recorded yet. Capture or run auto-scan to save timeline history.</div>
+      </div>
+    </footer>
+
+    <!-- CONFIG / SETTINGS MODAL MODAL -->
+    <div class="modal-backdrop" id="configModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>System & API Configuration</h3>
+          <button class="icon-btn" id="closeConfigModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          
+          <div class="form-group">
+            <label for="configApiKeyInput">NVIDIA API Key</label>
+            <input type="password" id="configApiKeyInput" placeholder="nvapi-...">
+            <small>Leave blank to use system default NVIDIA API Key.</small>
+          </div>
+
+          <div class="form-group">
+            <label for="configModelSelect">Multimodal Vision Model</label>
+            <select id="configModelSelect" class="select-input">
+              <option value="meta/llama-3.2-11b-vision-instruct">meta/llama-3.2-11b-vision-instruct (Recommended - Fast & Accurate)</option>
+              <option value="meta/llama-3.2-90b-vision-instruct">meta/llama-3.2-90b-vision-instruct (High Intelligence)</option>
+            </select>
+          </div>
+
+          <div class="form-group toggle-group">
+            <label for="configTtsToggle">Auto Text-to-Speech (TTS)</label>
+            <input type="checkbox" id="configTtsToggle" checked>
+          </div>
+
+          <div class="form-group toggle-group">
+            <label for="configSfxToggle">HUD Sound Effects (Web Audio)</label>
+            <input type="checkbox" id="configSfxToggle" checked>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button class="btn secondary-btn" id="saveConfigBtn">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
