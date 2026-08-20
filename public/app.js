@@ -610,8 +610,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingPromptTitle.textContent = activePreset === 'custom' ? `Analyzing: "${targetPrompt.substring(0, 30)}..."` : `Analyzing Camera View...`;
 
     try {
-      // Resolve backend API URL dynamically for file:// or cross-origin dev servers
-      const apiEndpoint = (window.location.protocol === 'file:' || window.location.port !== '3000') 
+      // Resolve backend API URL (local file:// vs Vercel / server hosting)
+      const apiEndpoint = (window.location.protocol === 'file:') 
         ? 'http://localhost:3000/api/analyze' 
         : '/api/analyze';
 
