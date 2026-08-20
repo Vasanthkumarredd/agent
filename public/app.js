@@ -665,6 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (conversationMemory.length > 10) {
         conversationMemory = conversationMemory.slice(-10); // Keep last 5 Q&A turns
       }
+      saveSessionMemory();
 
       displayAnalysisResult(lastAnalysisData);
       addHistoryItem(lastAnalysisData);
@@ -958,7 +959,46 @@ ${lastAnalysisData.analysis}
     friendPresetBtn.addEventListener('click', () => toggleFriendMode(true));
   }
 
-  // Initial UI sync
+  // Session Memory Persistence & UI Status
+  const clearMemoryBtn = document.getElementById('clearMemoryBtn');
+  const memoryStatusText = document.getElementById('memoryStatusText');
+
+  function saveSessionMemory() {
+    try {
+      sessionStorage.setItem('nexus_session_memory', JSON.stringify(conversationMemory));
+    } catch (e) {}
+    updateMemoryUi();
+  }
+
+  function loadSessionMemory() {
+    try {
+      const stored = sessionStorage.getItem('nexus_session_memory');
+      if (stored) {
+        conversationMemory = JSON.parse(stored);
+      }
+    } catch (e) {}
+    updateMemoryUi();
+  }
+
+  function updateMemoryUi() {
+    const turnCount = Math.floor(conversationMemory.length / 2);
+    if (memoryStatusText) {
+      memoryStatusText.textContent = `Memory: ${turnCount}`;
+    }
+  }
+
+  if (clearMemoryBtn) {
+    clearMemoryBtn.addEventListener('click', () => {
+      conversationMemory = [];
+      try { sessionStorage.removeItem('nexus_session_memory'); } catch (e) {}
+      updateMemoryUi();
+      playSound('motion');
+      alert("Session Conversation Memory has been reset.");
+    });
+  }
+
+  // Initial UI & Session Memory sync
   updateTtsUi();
+  loadSessionMemory();
 
 });
