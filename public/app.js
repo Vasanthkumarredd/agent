@@ -651,8 +651,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error("Analysis Error:", err);
-      const msg = err.message === 'Failed to fetch' 
-        ? "Could not reach backend server at http://localhost:3000. Please ensure 'node server.js' is running." 
+      const msg = (err.message === 'Failed to fetch') 
+        ? `Could not connect to API server (${apiEndpoint}). Please check your internet connection or refresh your browser.` 
         : err.message;
       alert(`Vision API Analysis Failed: ${msg}`);
       emptyOutputState.style.display = 'flex';
