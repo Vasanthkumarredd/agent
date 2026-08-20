@@ -295,18 +295,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Application State
+  let mediaStream = null;
+  let isCameraActive = false;
+  let currentFacingMode = 'environment'; // 'environment' (Back Camera) | 'user' (Front Camera)
+  let currentScanMode = 'manual'; // manual | auto | motion
+  let activePreset = 'object'; // object | ocr | safety | count | custom
+  let autoScanTimer = null;
+  let lastAnalysisTime = 0;
+  let isAnalyzing = false;
+  let lastAnalysisData = null;
+  let historyItems = [];
+
+  const flipCameraBtn = document.getElementById('flipCameraBtn');
+  const flipCameraLabel = document.getElementById('flipCameraLabel');
+
   // ==========================================
   // Camera Management (WebRTC)
   // ==========================================
   async function initCamera() {
     try {
+      // Stop existing tracks if switching camera
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+
       await enumerateCameraDevices();
       
       const constraints = {
         video: {
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: 'user'
+          facingMode: { ideal: currentFacingMode }
         },
         audio: false
       };
@@ -319,13 +340,17 @@ document.addEventListener('DOMContentLoaded', () => {
       mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       webcamVideo.srcObject = mediaStream;
 
+      // Apply unmirrored transform for back camera, mirrored for selfie camera
+      webcamVideo.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
+
       webcamVideo.onloadedmetadata = () => {
         webcamVideo.play();
         isCameraActive = true;
         cameraPlaceholder.style.display = 'none';
         analyzeNowBtn.disabled = false;
         
-        updateCameraStatus(true, "Camera Live");
+        const modeLabel = currentFacingMode === 'environment' ? 'Back Camera' : 'Front Camera';
+        updateCameraStatus(true, `Live (${modeLabel})`);
         hudResText.textContent = `${webcamVideo.videoWidth}x${webcamVideo.videoHeight}`;
         
         startMotionDetector();
@@ -615,6 +640,17 @@ document.addEventListener('DOMContentLoaded', () => {
   startCameraBtn.addEventListener('click', initCamera);
   analyzeNowBtn.addEventListener('click', triggerAnalysis);
   cameraSourceSelect.addEventListener('change', initCamera);
+
+  if (flipCameraBtn) {
+    flipCameraBtn.addEventListener('click', () => {
+      currentFacingMode = (currentFacingMode === 'environment') ? 'user' : 'environment';
+      if (flipCameraLabel) {
+        flipCameraLabel.textContent = (currentFacingMode === 'environment') ? 'Back Cam 🔄' : 'Front Cam 🔄';
+      }
+      if (cameraSourceSelect) cameraSourceSelect.value = '';
+      initCamera();
+    });
+  }
 
   // Keyboard shortcut: Spacebar triggers analysis
   document.addEventListener('keydown', (e) => {
