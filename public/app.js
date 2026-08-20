@@ -299,17 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
     || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
 
-  // Application State: Phone -> Back Camera ('environment'), Laptop -> Normal Webcam ('user')
-  let mediaStream = null;
-  let isCameraActive = false;
   let currentFacingMode = isMobileDevice ? 'environment' : 'user';
-  let currentScanMode = 'manual'; // manual | auto | motion
-  let activePreset = 'object'; // object | ocr | safety | count | custom
-  let autoScanTimer = null;
-  let lastAnalysisTime = 0;
-  let isAnalyzing = false;
-  let lastAnalysisData = null;
-  let historyItems = [];
 
   const flipCameraBtn = document.getElementById('flipCameraBtn');
   const flipCameraLabel = document.getElementById('flipCameraLabel');
