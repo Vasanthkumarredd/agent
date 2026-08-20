@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
-    const { image, prompt, apiKey, model, customSystemPrompt } = body;
+    const { image, prompt, apiKey, model, customSystemPrompt, history } = body;
 
     if (!image) {
       return res.status(400).json({ success: false, error: "No image payload provided." });
@@ -44,10 +44,25 @@ module.exports = async (req, res) => {
     }
 
     const messages = [];
-    if (customSystemPrompt && customSystemPrompt.trim()) {
-      messages.push({ role: "system", content: customSystemPrompt.trim() });
+    const sysPrompt = customSystemPrompt && customSystemPrompt.trim()
+      ? customSystemPrompt.trim()
+      : "You are a smart, context-aware AI vision assistant looking through a camera feed. You remember past objects seen and previous user questions. Answer user questions based on both the current camera view and conversation memory.";
+
+    messages.push({ role: "system", content: sysPrompt });
+
+    // Append conversation memory turns if provided
+    if (Array.isArray(history) && history.length > 0) {
+      history.slice(-8).forEach(item => {
+        if (item && item.role && item.content) {
+          messages.push({
+            role: item.role === 'assistant' ? 'assistant' : 'user',
+            content: String(item.content)
+          });
+        }
+      });
     }
 
+    // Add current multimodal turn
     messages.push({
       role: "user",
       content: [

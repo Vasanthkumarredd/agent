@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAnalyzing = false;
   let lastAnalysisData = null;
   let historyItems = [];
+  let conversationMemory = []; // Contextual Memory Buffer for Multi-Turn Q&A
 
   // Motion Detection State
   let motionCtx = null;
@@ -638,7 +639,8 @@ document.addEventListener('DOMContentLoaded', () => {
           prompt: targetPrompt,
           apiKey: configSettings.apiKey,
           model: configSettings.model,
-          customSystemPrompt: systemPromptForFriend
+          customSystemPrompt: systemPromptForFriend,
+          history: conversationMemory
         })
       });
 
@@ -656,6 +658,13 @@ document.addEventListener('DOMContentLoaded', () => {
         timestamp: new Date().toLocaleTimeString(),
         prompt: targetPrompt
       };
+
+      // Append turn to conversation memory for follow-up question context
+      conversationMemory.push({ role: 'user', content: `[User asked]: ${targetPrompt}` });
+      conversationMemory.push({ role: 'assistant', content: `[AI answered]: ${data.analysis}` });
+      if (conversationMemory.length > 10) {
+        conversationMemory = conversationMemory.slice(-10); // Keep last 5 Q&A turns
+      }
 
       displayAnalysisResult(lastAnalysisData);
       addHistoryItem(lastAnalysisData);
