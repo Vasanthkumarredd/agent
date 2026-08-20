@@ -107,14 +107,29 @@ app.post('/api/analyze', async (req, res) => {
   }
 });
 
+const os = require('os');
+
 // Serve frontend SPA fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
+  const nets = os.networkInterfaces();
+  let localIp = 'localhost';
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        localIp = net.address;
+        break;
+      }
+    }
+  }
+
   console.log(`==================================================`);
-  console.log(`🤖 AI Camera Vision Analyzer running on http://localhost:${PORT}`);
-  console.log(`🎯 NVIDIA Model: ${DEFAULT_MODEL}`);
+  console.log(`🤖 AI Camera Vision Analyzer is Online!`);
+  console.log(`💻 Local Access:   http://localhost:${PORT}`);
+  console.log(`📱 Mobile Access:  http://${localIp}:${PORT}`);
+  console.log(`🎯 NVIDIA Model:   ${DEFAULT_MODEL}`);
   console.log(`==================================================`);
 });

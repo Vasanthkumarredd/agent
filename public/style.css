@@ -1048,3 +1048,91 @@ body {
   align-items: center;
   justify-content: space-between;
 }
+
+/* ==========================================================================
+   MOBILE PHONE OPTIMIZATION (@media max-width: 768px)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .app-container {
+    padding: 8px;
+    gap: 10px;
+  }
+
+  .app-header {
+    padding: 10px 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .brand-text h1 {
+    font-size: 1.15rem;
+  }
+
+  .brand-text .subtitle {
+    font-size: 0.72rem;
+  }
+
+  .header-status {
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .camera-viewport-container {
+    min-height: 50vh;
+    border-radius: var(--radius-md);
+  }
+
+  .camera-toolbar {
+    padding: 10px 12px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .toolbar-center {
+    width: 100%;
+  }
+
+  .capture-btn {
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 1rem;
+    justify-content: center;
+  }
+
+  .preset-chips-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .preset-chip {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+
+  .custom-prompt-wrapper input {
+    font-size: 0.82rem;
+  }
+
+  .hud-reticle {
+    width: 200px;
+    height: 200px;
+  }
+
+  .history-footer {
+    padding: 10px 14px;
+  }
+
+  .history-item {
+    min-width: 100px;
+    height: 65px;
+  }
+}
