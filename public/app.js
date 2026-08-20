@@ -295,10 +295,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Application State
+  // Detect if running on Mobile Phone vs Laptop/Desktop
+  const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) 
+    || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+
+  // Application State: Phone -> Back Camera ('environment'), Laptop -> Normal Webcam ('user')
   let mediaStream = null;
   let isCameraActive = false;
-  let currentFacingMode = 'environment'; // 'environment' (Back Camera) | 'user' (Front Camera)
+  let currentFacingMode = isMobileDevice ? 'environment' : 'user';
   let currentScanMode = 'manual'; // manual | auto | motion
   let activePreset = 'object'; // object | ocr | safety | count | custom
   let autoScanTimer = null;
@@ -309,6 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const flipCameraBtn = document.getElementById('flipCameraBtn');
   const flipCameraLabel = document.getElementById('flipCameraLabel');
+
+  if (flipCameraLabel) {
+    flipCameraLabel.textContent = (currentFacingMode === 'environment') ? 'Back Cam 🔄' : 'Front Cam 🔄';
+  }
 
   // ==========================================
   // Camera Management (WebRTC)
