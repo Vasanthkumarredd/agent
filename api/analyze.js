@@ -73,13 +73,33 @@ module.exports = async (req, res) => {
 
     const startTime = Date.now();
 
-    const completion = await openai.chat.completions.create({
-      model: targetModel,
-      messages: messages,
-      max_tokens: 1024,
-      temperature: 0.2,
-      top_p: 0.9
-    });
+    // Multi-model fallback retry loop to prevent 500 status code errors from cloud API
+    const modelsToTry = [targetModel, "meta/llama-3.2-11b-vision-instruct", "nvidia/neva-22b"].filter((v, i, a) => a.indexOf(v) === i);
+    let completion = null;
+    let usedModel = targetModel;
+    let lastErr = null;
+
+    for (const mName of modelsToTry) {
+      try {
+        completion = await openai.chat.completions.create({
+          model: mName,
+          messages: messages,
+          max_tokens: 1024,
+          temperature: 0.2,
+          top_p: 0.9
+        });
+        usedModel = mName;
+        break;
+      } catch (err) {
+        console.warn(`Vercel Vision API model [${mName}] failed:`, err.message || err);
+        lastErr = err;
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
+    if (!completion) {
+      throw lastErr || new Error("NVIDIA Vision API is currently experiencing heavy load. Please retry in a moment.");
+    }
 
     const elapsedMs = Date.now() - startTime;
     const analysisText = completion.choices[0]?.message?.content || "No analysis generated.";
@@ -87,7 +107,7 @@ module.exports = async (req, res) => {
     return res.status(200).json({
       success: true,
       analysis: analysisText,
-      model: targetModel,
+      model: usedModel,
       latencyMs: elapsedMs,
       timestamp: new Date().toISOString()
     });
