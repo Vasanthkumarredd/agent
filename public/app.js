@@ -329,26 +329,37 @@ document.addEventListener('DOMContentLoaded', () => {
         mediaStream = null;
       }
 
-      await enumerateCameraDevices();
-      
-      const constraints = {
-        video: {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: { ideal: currentFacingMode }
-        },
-        audio: false
-      };
-
-      const selectedDeviceId = cameraSourceSelect.value;
-      if (selectedDeviceId) {
-        constraints.video.deviceId = { exact: selectedDeviceId };
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Camera API is not supported in this browser context. Please use Google Chrome, Edge, or Safari over HTTPS/localhost.");
+        return;
       }
 
-      mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const selectedDeviceId = cameraSourceSelect.value;
+      let videoConstraint = {};
+
+      if (selectedDeviceId && selectedDeviceId.trim() !== '') {
+        videoConstraint = { deviceId: { exact: selectedDeviceId } };
+      } else {
+        videoConstraint = { facingMode: currentFacingMode };
+      }
+
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: videoConstraint,
+          audio: false
+        });
+      } catch (firstErr) {
+        console.warn("First camera constraint failed, retrying simple video: true", firstErr);
+        // Fallback to basic true constraint if specific facingMode/deviceId constraint failed
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+      }
+
       webcamVideo.srcObject = mediaStream;
 
-      // Apply unmirrored transform for back camera, mirrored for selfie camera
+      // Apply unmirrored transform for back camera, mirrored for selfie/laptop camera
       webcamVideo.style.transform = (currentFacingMode === 'user') ? 'scaleX(-1)' : 'scaleX(1)';
 
       webcamVideo.onloadedmetadata = () => {
@@ -361,6 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCameraStatus(true, `Live (${modeLabel})`);
         hudResText.textContent = `${webcamVideo.videoWidth}x${webcamVideo.videoHeight}`;
         
+        // Enumerate devices AFTER permissions granted to populate clean labels
+        enumerateCameraDevices();
         startMotionDetector();
         startFpsCounter();
         playSound('success');
@@ -369,7 +382,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       console.error("Camera Init Error:", err);
       updateCameraStatus(false, "Camera Access Denied");
-      alert("Could not access camera feed. Please allow camera permissions in your browser.");
+      
+      let errorHint = err.message || err.name || "Camera permission denied";
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorHint = "Camera permission was blocked. Please click the lock/camera icon in your browser address bar to allow camera access.";
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorHint = "Camera is currently being used by another application (like Zoom, Teams, or Skype). Please close other camera apps and try again.";
+      }
+      alert(`Could not start laptop webcam: ${errorHint}`);
     }
   }
 
