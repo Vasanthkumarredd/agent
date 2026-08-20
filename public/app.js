@@ -481,10 +481,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 250);
   }
 
+  let uploadedImageBase64 = null;
+
+  const uploadPhotoBtn = document.getElementById('uploadPhotoBtn');
+  const fileInputFallback = document.getElementById('fileInputFallback');
+  const viewportContainer = document.getElementById('viewportContainer');
+
+  if (uploadPhotoBtn && fileInputFallback) {
+    uploadPhotoBtn.addEventListener('click', () => {
+      fileInputFallback.click();
+    });
+
+    fileInputFallback.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 800;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          uploadedImageBase64 = canvas.toDataURL('image/jpeg', 0.82);
+          cameraPlaceholder.style.display = 'none';
+          analyzeNowBtn.disabled = false;
+
+          // Render preview on canvas
+          if (hudCanvas && viewportContainer) {
+            hudCanvas.width = viewportContainer.clientWidth || width;
+            hudCanvas.height = viewportContainer.clientHeight || height;
+            const hudCtx = hudCanvas.getContext('2d');
+            hudCtx.drawImage(img, 0, 0, hudCanvas.width, hudCanvas.height);
+          }
+
+          updateCameraStatus(true, "Photo Uploaded");
+          playSound('success');
+          triggerAnalysis();
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   // ==========================================
   // Frame Capture & Image Optimization
   // ==========================================
   function captureOptimizedFrame() {
+    if (uploadedImageBase64) {
+      return uploadedImageBase64;
+    }
     if (!webcamVideo.videoWidth) return null;
 
     const canvas = document.createElement('canvas');
@@ -514,7 +578,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Vision Analysis API Request
   // ==========================================
   async function triggerAnalysis() {
-    if (!isCameraActive || isAnalyzing) return;
+    if ((!isCameraActive && !uploadedImageBase64) || isAnalyzing) return;
 
     const imageDataUrl = captureOptimizedFrame();
     if (!imageDataUrl) return;
