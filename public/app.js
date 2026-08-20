@@ -100,7 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
     object: "Examine the object placed in front of the camera. Identify what it is, its exact position in the frame, main colors, key features, material, and likely purpose or function.",
     ocr: "Read and extract all visible text, document headers, serial numbers, labels, or handwritten notes in this camera view.",
     safety: "Inspect the camera view for safety hazards, broken items, spilled liquids, blocked pathways, or out-of-place objects.",
-    count: "Count and list all distinct items visible in this camera view, categorizing them by object type."
+    count: "Count and list all distinct items visible in this camera view, categorizing them by object type.",
+    friend: "What do you see in the camera feed right now? Give me a quick, friendly 1-2 sentence response."
   };
 
   // ==========================================
@@ -181,6 +182,15 @@ document.addEventListener('DOMContentLoaded', () => {
     utterance.onend = utterance.onerror = () => {
       ttsSpeakBtn.classList.remove('active');
       ttsBtnText.textContent = "Read Aloud";
+
+      // If Friend Chat Mode is active, automatically listen for the user's next spoken sentence!
+      if (friendMode) {
+        setTimeout(() => {
+          if (friendMode && !isAnalyzing && !isListening) {
+            startListening();
+          }
+        }, 500);
+      }
     };
 
     window.speechSynthesis.speak(utterance);
@@ -607,7 +617,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (activePreset === 'custom' && customPromptInput.value.trim()) {
       targetPrompt = customPromptInput.value.trim();
     }
-    loadingPromptTitle.textContent = activePreset === 'custom' ? `Analyzing: "${targetPrompt.substring(0, 30)}..."` : `Analyzing Camera View...`;
+    loadingPromptTitle.textContent = (activePreset === 'custom' || friendMode) ? `Analyzing: "${targetPrompt.substring(0, 30)}..."` : `Analyzing Camera View...`;
+
+    // System prompt for concise, friendly spoken answers in Friend Mode
+    const systemPromptForFriend = (friendMode || activePreset === 'friend')
+      ? "You are a smart, friendly companion looking through a live camera feed. Give a direct, concise, natural spoken answer (1 to 2 short sentences maximum). Do not use bullet points or list formatting. Speak like two friends having a conversation."
+      : undefined;
 
     try {
       // Resolve backend API URL (local file:// vs Vercel / server hosting)
@@ -622,7 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
           image: imageDataUrl,
           prompt: targetPrompt,
           apiKey: configSettings.apiKey,
-          model: configSettings.model
+          model: configSettings.model,
+          customSystemPrompt: systemPromptForFriend
         })
       });
 
@@ -887,6 +903,51 @@ ${lastAnalysisData.analysis}
     configModal.classList.remove('active');
     apiStatusText.textContent = `NVIDIA Vision (${configSettings.model.split('/')[1]})`;
   });
+
+  // Friend Chat Mode Engine
+  let friendMode = false;
+  const friendModeHeaderBtn = document.getElementById('friendModeHeaderBtn');
+  const friendModeText = document.getElementById('friendModeText');
+  const friendPresetBtn = document.getElementById('friendPresetBtn');
+
+  function toggleFriendMode(enable) {
+    friendMode = (enable !== undefined) ? enable : !friendMode;
+
+    if (friendMode) {
+      configSettings.ttsEnabled = true;
+      updateTtsUi();
+
+      if (friendModeHeaderBtn) friendModeHeaderBtn.classList.add('active');
+      if (friendModeText) friendModeText.textContent = "Friend Chat ON";
+      
+      presetChips.forEach(c => c.classList.remove('active'));
+      if (friendPresetBtn) friendPresetBtn.classList.add('active');
+      activePreset = 'friend';
+
+      if (!isCameraActive) {
+        initCamera();
+      }
+
+      setTimeout(() => {
+        if (friendMode && !isListening) startListening();
+      }, 500);
+
+    } else {
+      if (friendModeHeaderBtn) friendModeHeaderBtn.classList.remove('active');
+      if (friendModeText) friendModeText.textContent = "Friend Chat OFF";
+      if (friendPresetBtn) friendPresetBtn.classList.remove('active');
+      
+      if (isListening) stopListening();
+    }
+  }
+
+  if (friendModeHeaderBtn) {
+    friendModeHeaderBtn.addEventListener('click', () => toggleFriendMode());
+  }
+
+  if (friendPresetBtn) {
+    friendPresetBtn.addEventListener('click', () => toggleFriendMode(true));
+  }
 
   // Initial UI sync
   updateTtsUi();

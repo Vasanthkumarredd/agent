@@ -40,8 +40,12 @@
           <span id="apiStatusText">NVIDIA NIM Vision API</span>
         </div>
         <button class="icon-btn-text" id="quickTtsToggleBtn" title="Toggle Auto Voice Readout (TTS)">
-          <span id="quickTtsIcon">🔇</span>
-          <span id="quickTtsText">Voice OFF</span>
+          <span id="quickTtsIcon">🔊</span>
+          <span id="quickTtsText">Voice ON</span>
+        </button>
+        <button class="icon-btn-text highlight-btn" id="friendModeHeaderBtn" title="Toggle Continuous Voice Friend Chat">
+          <span id="friendModeIcon">🤝</span>
+          <span id="friendModeText">Friend Chat OFF</span>
         </button>
         <button class="icon-btn" id="configToggleBtn" title="API & System Settings">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -197,6 +201,10 @@
             <button class="preset-chip" data-preset="count">
               <span class="chip-icon">📦</span>
               <span class="chip-label">Item Count & Inventory</span>
+            </button>
+            <button class="preset-chip" data-preset="friend" id="friendPresetBtn">
+              <span class="chip-icon">🤝</span>
+              <span class="chip-label">Voice Friend Chat</span>
             </button>
           </div>
 
@@ -365,6 +373,6 @@
 
   </div>
 
-  <script src="app.js?v=2.0.0"></script>
+  <script src="app.js?v=3.0.0"></script>
 </body>
 </html>

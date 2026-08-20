@@ -240,6 +240,13 @@ body {
   background: rgba(0, 242, 254, 0.1);
 }
 
+.icon-btn-text.highlight-btn.active {
+  color: #ffffff;
+  border-color: var(--neon-pink);
+  background: linear-gradient(135deg, rgba(255, 0, 127, 0.3), rgba(121, 40, 202, 0.3));
+  box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+}
+
 /* Main Layout Grid */
 .main-layout {
   display: grid;
